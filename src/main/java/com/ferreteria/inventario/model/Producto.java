@@ -2,15 +2,21 @@ package com.ferreteria.inventario.model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import jakarta.validation.constraints.*;
+
 
 @Document(collection = "productos")
 public class Producto {
 
     @Id
     private String id;
+    @NotBlank(message = "El código no puede estar vacío")
     private String codigo;
+    @NotBlank(message = "El nombre no puede estar vacío")
     private String nombre;
+    @Min(value = 1, message = "La cantidad debe ser mayor que 0")
     private int cantidad;
+    @DecimalMin(value = "0.01", message = "El precio debe ser mayor que 0")
     private double precioUnitario;
 
     public Producto() {}
