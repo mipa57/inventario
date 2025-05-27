@@ -21,7 +21,7 @@ import com.ferreteria.inventario.repository.ProductoRepository;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/productos")
+@RequestMapping("/api/productos")
 @CrossOrigin(origins = "*") // Permite peticiones desde frontend externo (como Netlify)
 public class ProductoController {
 
