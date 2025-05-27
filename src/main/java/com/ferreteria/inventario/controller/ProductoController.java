@@ -19,16 +19,19 @@ public class ProductoController {
 
     // ✅ Agregar producto
     @PostMapping
-    public ResponseEntity<?> agregarProducto(@RequestBody Producto producto) {
-        Optional<Producto> existente = repository.findByCodigo(producto.getCodigo());
+    public ResponseEntity<String> agregarProducto(@RequestBody Producto producto) {
+    Optional<Producto> existente = repositorio.findByNombre(producto.getNombre());
 
-        if (existente.isPresent()) {
-            return ResponseEntity.badRequest().body("⚠️ Error: ya existe un producto con ese código.");
-        }
-
-        repository.save(producto);
-        return ResponseEntity.ok("✅ Producto agregado correctamente.");
+    if (existente.isPresent()) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body("⚠️ El producto ya existe.");
     }
+
+    repositorio.save(producto);
+    return ResponseEntity.status(HttpStatus.CREATED)
+            .body("✅ Producto agregado correctamente.");
+}
+
 
     // ✅ Ver todos los productos
     @GetMapping
@@ -36,31 +39,35 @@ public class ProductoController {
         return repository.findAll();
     }
 
+    
     // ✅ Actualizar producto por ID
     @PutMapping("/{id}")
-    public ResponseEntity<?> actualizar(@PathVariable String id, @RequestBody Producto productoNuevo) {
-        Optional<Producto> existente = repository.findById(id);
-        if (!existente.isPresent()) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<String> actualizarProducto(@PathVariable String id, @RequestBody Producto nuevoProducto) {
+    Optional<Producto> productoOptional = repositorio.findById(id);
 
-        Producto prod = existente.get();
-        prod.setNombre(productoNuevo.getNombre());
-        prod.setCantidad(productoNuevo.getCantidad());
-        prod.setPrecioUnitario(productoNuevo.getPrecioUnitario());
-
-        repository.save(prod);
+    if (productoOptional.isPresent()) {
+        Producto producto = productoOptional.get();
+        producto.setNombre(nuevoProducto.getNombre());
+        producto.setCantidad(nuevoProducto.getCantidad());
+        producto.setPrecioUnitario(nuevoProducto.getPrecioUnitario());
+        repositorio.save(producto);
         return ResponseEntity.ok("🔄 Producto actualizado correctamente.");
     }
 
+    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body("❌ Producto no encontrado.");
+}
+
+
     // ✅ Eliminar producto por ID
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> eliminar(@PathVariable String id) {
-        if (!repository.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
-
-        repository.deleteById(id);
+    public ResponseEntity<String> eliminarProducto(@PathVariable String id) {
+    if (repositorio.existsById(id)) {
+        repositorio.deleteById(id);
         return ResponseEntity.ok("🗑️ Producto eliminado correctamente.");
     }
+    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body("❌ No se encontró el producto a eliminar.");
+}
+
 }
