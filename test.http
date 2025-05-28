@@ -1,0 +1,47 @@
+### 🔍 Listar todos los productos
+GET http://localhost:8080/api/productos
+Content-Type: application/json
+
+###
+
+### 🚨 Ver productos con bajo stock (por defecto límite 5)
+GET http://localhost:8080/api/productos/bajo-stock
+Content-Type: application/json
+
+###
+
+### 🚨 Ver productos con stock menor o igual a 10
+GET http://localhost:8080/api/productos/bajo-stock?limite=10
+Content-Type: application/json
+
+###
+
+### ➕ Crear un nuevo producto
+POST http://localhost:8080/api/productos
+Content-Type: application/json
+
+{
+  "codigo": "P100",
+  "nombre": "Alicate",
+  "cantidad": 8,
+  "precioUnitario": 15.75
+}
+
+###
+
+### ✏️ Actualizar un producto (REEMPLAZAR {id})
+PUT http://localhost:8080/api/productos/{id}
+Content-Type: application/json
+
+{
+  "codigo": "P100",
+  "nombre": "Alicate reforzado",
+  "cantidad": 12,
+  "precioUnitario": 18.50
+}
+
+###
+
+### 🗑️ Eliminar un producto (REEMPLAZAR {id})
+DELETE http://localhost:8080/api/productos/{id}
+Content-Type: application/json
