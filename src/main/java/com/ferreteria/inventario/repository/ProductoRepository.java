@@ -8,4 +8,6 @@ import com.ferreteria.inventario.model.Producto;
 
 public interface ProductoRepository extends MongoRepository<Producto, String> {
     Optional<Producto> findByNombre(String nombre);
+
+    Optional<Producto> findByCodigo(String codigo);
 }
