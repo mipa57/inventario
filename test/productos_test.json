@@ -1,0 +1,122 @@
+[
+    {
+      "codigo": "P001",
+      "nombre": "Martillo",
+      "cantidad": 15,
+      "precioUnitario": 5.99
+    },
+    {
+      "codigo": "P002",
+      "nombre": "Destornillador",
+      "cantidad": 30,
+      "precioUnitario": 3.5
+    },
+    {
+      "codigo": "P003",
+      "nombre": "Llave Inglesa",
+      "cantidad": 10,
+      "precioUnitario": 7.99
+    },
+    {
+      "codigo": "P004",
+      "nombre": "Taladro",
+      "cantidad": 5,
+      "precioUnitario": 45.0
+    },
+    {
+      "codigo": "P005",
+      "nombre": "Sierra",
+      "cantidad": 8,
+      "precioUnitario": 20.0
+    },
+    {
+      "codigo": "P006",
+      "nombre": "Cinta M\u00e9trica",
+      "cantidad": 25,
+      "precioUnitario": 2.5
+    },
+    {
+      "codigo": "P007",
+      "nombre": "Nivel",
+      "cantidad": 12,
+      "precioUnitario": 6.75
+    },
+    {
+      "codigo": "P008",
+      "nombre": "Pinza",
+      "cantidad": 20,
+      "precioUnitario": 4.25
+    },
+    {
+      "codigo": "P009",
+      "nombre": "Alicate",
+      "cantidad": 18,
+      "precioUnitario": 4.95
+    },
+    {
+      "codigo": "P010",
+      "nombre": "Lima",
+      "cantidad": 9,
+      "precioUnitario": 2.99
+    },
+    {
+      "codigo": "P011",
+      "nombre": "Broca",
+      "cantidad": 50,
+      "precioUnitario": 1.1
+    },
+    {
+      "codigo": "P012",
+      "nombre": "Llave Allen",
+      "cantidad": 35,
+      "precioUnitario": 0.99
+    },
+    {
+      "codigo": "P013",
+      "nombre": "Escuadra",
+      "cantidad": 10,
+      "precioUnitario": 3.25
+    },
+    {
+      "codigo": "P014",
+      "nombre": "Tenaza",
+      "cantidad": 7,
+      "precioUnitario": 5.75
+    },
+    {
+      "codigo": "P015",
+      "nombre": "Serrucho",
+      "cantidad": 3,
+      "precioUnitario": 9.99
+    },
+    {
+      "codigo": "P016",
+      "nombre": "C\u00fater",
+      "cantidad": 13,
+      "precioUnitario": 1.75
+    },
+    {
+      "codigo": "P017",
+      "nombre": "Pistola de Silicona",
+      "cantidad": 6,
+      "precioUnitario": 8.99
+    },
+    {
+      "codigo": "P018",
+      "nombre": "Silicona",
+      "cantidad": 40,
+      "precioUnitario": 2.2
+    },
+    {
+      "codigo": "P019",
+      "nombre": "Remachadora",
+      "cantidad": 4,
+      "precioUnitario": 11.49
+    },
+    {
+      "codigo": "P020",
+      "nombre": "Juego de Dados",
+      "cantidad": 2,
+      "precioUnitario": 14.99
+    }
+]
