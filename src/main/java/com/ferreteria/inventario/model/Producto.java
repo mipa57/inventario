@@ -1,41 +1,36 @@
-package com.ferreteria.inventario.model;
+package com.ferreteria.inventario.model; // Asegúrate de que el paquete sea correcto
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-import jakarta.validation.constraints.*;
+// ************************************************************
+// CAMBIO CLAVE: Importaciones de Jakarta Bean Validation
+// ************************************************************
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import lombok.Data; // Si usas Lombok, asegúrate de que esté importado
 
-
-@Document(collection = "productos")
+@Data // Anotación de Lombok para getters, setters, equals, hashCode, toString
 public class Producto {
 
-    @Id
-    private String id;
-    @NotBlank(message = "El c�digo no puede estar vac�o")
+    private String id; // ID de MongoDB, puede ser String o ObjectId
+
+    @NotBlank(message = "El código no puede estar vacío")
     private String codigo;
-    @NotBlank(message = "El nombre no puede estar vac�o")
+
+    @NotBlank(message = "El nombre no puede estar vacío")
     private String nombre;
-    @Min(value = 1, message = "La cantidad debe ser mayor que 0")
+
+    @Min(value = 0, message = "La cantidad no puede ser negativa")
     private int cantidad;
-    @DecimalMin(value = "0.01", message = "El precio debe ser mayor que 0")
+
+    @DecimalMin(value = "0.0", inclusive = true, message = "El precio unitario no puede ser negativo")
     private double precioUnitario;
 
-    public Producto() {}
-
-    public Producto(String codigo, String nombre, int cantidad, double precioUnitario) {
-        this.codigo = codigo;
-        this.nombre = nombre;
-        this.cantidad = cantidad;
-        this.precioUnitario = precioUnitario;
-    }
-
-    // Getters y Setters
-    public String getId() { return id; }
-    public String getCodigo() { return codigo; }
-    public void setCodigo(String codigo) { this.codigo = codigo; }
-    public String getNombre() { return nombre; }
-    public void setNombre(String nombre) { this.nombre = nombre; }
-    public int getCantidad() { return cantidad; }
-    public void setCantidad(int cantidad) { this.cantidad = cantidad; }
-    public double getPrecioUnitario() { return precioUnitario; }
-    public void setPrecioUnitario(double precioUnitario) { this.precioUnitario = precioUnitario; }
+    // Puedes añadir constructores si los necesitas, Lombok @Data los genera por defecto
+    // public Producto() {}
+    // public Producto(String codigo, String nombre, int cantidad, double precioUnitario) {
+    //     this.codigo = codigo;
+    //     this.nombre = nombre;
+    //     this.cantidad = cantidad;
+    //     this.precioUnitario = precioUnitario;
+    // }
 }

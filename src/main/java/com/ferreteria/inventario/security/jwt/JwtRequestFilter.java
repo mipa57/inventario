@@ -1,6 +1,6 @@
-package com.ferreteria.inventario.security.jwt; // Asegúrate de que el paquete sea correcto
+package com.ferreteria.inventario.security.jwt;
 
-import com.ferreteria.inventario.security.service.UserDetailsServiceImpl; // Asegúrate de que el paquete sea correcto
+import com.ferreteria.inventario.security.service.UserDetailsServiceImpl;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -8,10 +8,13 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+// ************************************************************
+// CAMBIO CLAVE: Importaciones de Jakarta EE
+// ************************************************************
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 @Component
@@ -34,20 +37,16 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         String username = null;
         String jwt = null;
 
-        // Extrae el token JWT del encabezado Authorization (formato: "Bearer <token>")
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            jwt = authorizationHeader.substring(7); // Obtiene la cadena del token
-            username = jwtUtil.extractUsername(jwt); // Extrae el nombre de usuario del token
+            jwt = authorizationHeader.substring(7);
+            username = jwtUtil.extractUsername(jwt);
         }
 
-        // Si el nombre de usuario existe y no hay autenticación en el contexto de seguridad
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
 
-            // Valida el token con los detalles del usuario
             if (jwtUtil.validateToken(jwt, userDetails)) {
-                // Si el token es válido, crea un objeto de autenticación y lo establece en el contexto
                 UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 usernamePasswordAuthenticationToken
@@ -55,7 +54,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
             }
         }
-        chain.doFilter(request, response); // Continúa con la cadena de filtros
+        chain.doFilter(request, response);
     }
 }
 
