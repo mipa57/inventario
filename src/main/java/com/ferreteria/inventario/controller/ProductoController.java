@@ -1,102 +1,79 @@
-package com.ferreteria.inventario.controller;
+package com.ferreteria.inventario.controller; // Asegúrate de que el paquete sea correcto
+
+import com.ferreteria.inventario.model.Producto; // Asegúrate de que el paquete sea correcto
+import com.ferreteria.inventario.repository.ProductoRepository; // Asegúrate de que el paquete sea correcto
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize; // Importa esta anotación
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
-
-import com.ferreteria.inventario.model.Producto;
-import com.ferreteria.inventario.repository.ProductoRepository;
-
-import jakarta.validation.Valid;
-
 @RestController
 @RequestMapping("/api/productos")
-@CrossOrigin(origins = "*")
+// ************************************************************
+// CAMBIO CLAVE: Protege todos los métodos de este controlador
+// ************************************************************
+@PreAuthorize("isAuthenticated()") // Requiere que el usuario esté autenticado para acceder a cualquier método aquí
 public class ProductoController {
 
-    @Autowired
-    private ProductoRepository repositorio;
+    private final ProductoRepository productoRepository;
 
-    // GET: listar todos
+    public ProductoController(ProductoRepository productoRepository) {
+        this.productoRepository = productoRepository;
+    }
+
     @GetMapping
-    public List<Producto> obtenerTodos() {
-        return repositorio.findAll();
+    public List<Producto> getAllProductos() {
+        return productoRepository.findAll();
     }
 
-    // GET: obtener por código (opcional para editar)
     @GetMapping("/{codigo}")
-    public ResponseEntity<?> obtenerPorCodigo(@PathVariable String codigo) {
-        Optional<Producto> producto = repositorio.findByCodigo(codigo);
-        return producto.isPresent() ? ResponseEntity.ok(producto.get()) : ResponseEntity.notFound().build();
+    public ResponseEntity<Producto> getProductoByCodigo(@PathVariable String codigo) {
+        Optional<Producto> producto = productoRepository.findByCodigo(codigo);
+        return producto.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // POST: crear producto
     @PostMapping
-    public ResponseEntity<?> crearProducto(@Valid @RequestBody Producto producto, BindingResult result) {
-        if (result.hasErrors()) {
-            List<String> errores = result.getFieldErrors()
-                    .stream()
-                    .map(error -> error.getDefaultMessage())
-                    .toList();
-            return ResponseEntity.badRequest().body(errores);
+    public ResponseEntity<Producto> createProducto(@RequestBody Producto producto) {
+        // Validación de código duplicado a nivel de controlador (opcional si ya lo haces en frontend)
+        if (productoRepository.findByCodigo(producto.getCodigo()).isPresent()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(null); // Código 409 Conflict
         }
-
-        // Validar si ya existe un producto con el mismo código
-        Optional<Producto> existente = repositorio.findByCodigo(producto.getCodigo());
-        if (existente.isPresent()) {
-            return ResponseEntity.badRequest().body("⚠️ Ya existe un producto con ese código.");
-        }
-
-        Producto guardado = repositorio.save(producto);
-        return ResponseEntity.ok(guardado);
+        Producto savedProducto = productoRepository.save(producto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedProducto);
     }
 
-    // PUT: actualizar producto
     @PutMapping("/{codigo}")
-    public ResponseEntity<?> actualizarProducto(@PathVariable String codigo, @Valid @RequestBody Producto producto, BindingResult result) {
-        if (result.hasErrors()) {
-            List<String> errores = result.getFieldErrors()
-                    .stream()
-                    .map(error -> error.getDefaultMessage())
-                    .toList();
-            return ResponseEntity.badRequest().body(errores);
-        }
-
-        Optional<Producto> existente = repositorio.findByCodigo(codigo);
-        if (existente.isPresent()) {
-            Producto actualizar = existente.get();
-            actualizar.setNombre(producto.getNombre());
-            actualizar.setCantidad(producto.getCantidad());
-            actualizar.setPrecioUnitario(producto.getPrecioUnitario());
-
-            return ResponseEntity.ok(repositorio.save(actualizar));
+    public ResponseEntity<Producto> updateProducto(@PathVariable String codigo, @RequestBody Producto productoDetails) {
+        Optional<Producto> producto = productoRepository.findByCodigo(codigo);
+        if (producto.isPresent()) {
+            Producto existingProducto = producto.get();
+            existingProducto.setNombre(productoDetails.getNombre());
+            existingProducto.setCantidad(productoDetails.getCantidad());
+            existingProducto.setPrecioUnitario(productoDetails.getPrecioUnitario());
+            Producto updatedProducto = productoRepository.save(existingProducto);
+            return ResponseEntity.ok(updatedProducto);
         } else {
             return ResponseEntity.notFound().build();
         }
     }
 
-    // DELETE: eliminar producto
     @DeleteMapping("/{codigo}")
-    public ResponseEntity<?> eliminarProducto(@PathVariable String codigo) {
-        Optional<Producto> producto = repositorio.findByCodigo(codigo);
+    public ResponseEntity<Void> deleteProducto(@PathVariable String codigo) {
+        Optional<Producto> producto = productoRepository.findByCodigo(codigo);
         if (producto.isPresent()) {
-            repositorio.delete(producto.get());
-            return ResponseEntity.ok("🗑️ Producto eliminado exitosamente.");
+            productoRepository.delete(producto.get());
+            return ResponseEntity.noContent().build();
         } else {
-            return ResponseEntity.status(404).body("❌ Producto no encontrado.");
+            return ResponseEntity.notFound().build();
         }
     }
 
-    // GET: productos con bajo stock
     @GetMapping("/bajo-stock")
-    public List<Producto> productosConBajoStock(@RequestParam(defaultValue = "5") int limite) {
-        return repositorio.findAll()
-                .stream()
-                .filter(p -> p.getCantidad() <= limite)
-                .toList();
+    public List<Producto> getProductosBajoStock() {
+        // Asumiendo que 'cantidad' es el campo para el stock y 5 es el umbral
+        return productoRepository.findByCantidadLessThanEqual(5);
     }
 }
