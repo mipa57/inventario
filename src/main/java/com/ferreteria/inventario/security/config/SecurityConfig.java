@@ -1,78 +1,70 @@
 package com.ferreteria.inventario.security.config;
 
-import com.ferreteria.inventario.security.jwt.JwtRequestFilter;
 import com.ferreteria.inventario.security.service.UserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity; // Nuevo import
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder; // Solo para desarrollo, NO USAR EN PRODUCCIÓN
+import org.springframework.security.crypto.password.NoOpPasswordEncoder; // Importar NoOpPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.SecurityFilterChain; // Nuevo import
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
-@EnableWebSecurity // Habilita la seguridad web de Spring
-@EnableMethodSecurity(prePostEnabled = true) // Reemplazo de @EnableGlobalMethodSecurity
+@EnableWebSecurity
 public class SecurityConfig {
 
     private final UserDetailsServiceImpl userDetailsService;
-    private final JwtRequestFilter jwtRequestFilter;
+    // No inyectamos AuthEntryPointJwt ni JwtFilter aquí por ahora, nos enfocamos en el login.
 
-    public SecurityConfig(UserDetailsServiceImpl userDetailsService, JwtRequestFilter jwtRequestFilter) {
+    public SecurityConfig(UserDetailsServiceImpl userDetailsService) {
         this.userDetailsService = userDetailsService;
-        this.jwtRequestFilter = jwtRequestFilter;
     }
 
-    // Define el PasswordEncoder.
-    // **************************************************************************
-    // ADVERTENCIA: NoOpPasswordEncoder.getInstance() es solo para DESARROLLO.
-    // En producción, DEBES usar un codificador de contraseñas seguro como BCryptPasswordEncoder.
-    // Por ejemplo: return new BCryptPasswordEncoder();
-    // **************************************************************************
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return NoOpPasswordEncoder.getInstance(); // No codifica la contraseña (solo para pruebas con {noop}1234)
-        // return new BCryptPasswordEncoder(); // Opción segura para producción
+        // Usamos NoOpPasswordEncoder para contraseñas en texto plano.
+        // Esto es SOLO para pruebas y NO SE DEBE USAR EN PRODUCCIÓN.
+        System.out.println("DEBUG: SecurityConfig - PasswordEncoder bean creado: " + NoOpPasswordEncoder.getInstance().getClass().getName());
+        return NoOpPasswordEncoder.getInstance();
     }
 
-    // Configura el AuthenticationManager como un Bean
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
-    }
-
-    // Define el DaoAuthenticationProvider para configurar UserDetailsService y PasswordEncoder
-    @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
+    public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
+        authProvider.setPasswordEncoder(passwordEncoder()); // Usa el PasswordEncoder definido arriba
+        System.out.println("DEBUG: SecurityConfig - DaoAuthenticationProvider configurado con UserDetailsService y PasswordEncoder.");
         return authProvider;
     }
 
-    // Configura las reglas de autorización HTTP y los filtros
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Deshabilita CSRF (nueva sintaxis para Spring Security 6)
-                .authorizeHttpRequests(authorize -> authorize // Nueva sintaxis para reglas de autorización
-                        .requestMatchers("/api/auth/login").permitAll() // Permite el acceso a la URL de login sin autenticación
-                        .requestMatchers("/api/productos/**").authenticated() // Protege todos los endpoints de productos
-                        .anyRequest().authenticated() // Cualquier otra petición requiere autenticación
+                .csrf(AbstractHttpConfigurer::disable) // Deshabilita CSRF para desarrollo y APIs REST
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/auth/**").permitAll() // Permitir acceso a la ruta de autenticación
+                        .anyRequest().authenticated() // Todas las demás rutas requieren autenticación
                 )
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // Las sesiones son sin estado (para JWT)
-                );
+                // Agrega el authenticationProvider al HttpSecurity para que el AuthenticationManager lo use
+                .authenticationProvider(authenticationProvider()); // Importante para que el AuthenticationManager lo reconozca
 
-        // Agrega el filtro JWT antes del filtro de autenticación de usuario/contraseña
-        http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+        // Por ahora, no añadimos el filtro JWT si no estamos usándolo activamente.
+        // .addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
-        return http.build(); // Construye y devuelve el SecurityFilterChain
+        return http.build();
     }
+
+    // Este método es para configurar el AuthenticationManager de forma global si fuera necesario,
+    // pero con el bean AuthenticationProvider, Spring Boot suele auto-configurarlo.
+    // En las versiones modernas de Spring Security, si proporcionas un AuthenticationProvider bean,
+    // Spring Boot lo usa para configurar el AuthenticationManager automáticamente.
+    // protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+    //     auth.authenticationProvider(authenticationProvider());
+    // }
 }

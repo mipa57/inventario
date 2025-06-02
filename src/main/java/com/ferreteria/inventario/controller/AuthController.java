@@ -1,13 +1,17 @@
 package com.ferreteria.inventario.controller; // Asegúrate de que el paquete sea correcto
 
-import com.ferreteria.inventario.security.jwt.JwtUtil; // Asegúrate de que el paquete sea correcto
-import com.ferreteria.inventario.security.service.UserDetailsServiceImpl; // Asegúrate de que el paquete sea correcto
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.http.ResponseEntity; // Asegúrate de que el paquete sea correcto
+import org.springframework.security.authentication.AuthenticationManager; // Asegúrate de que el paquete sea correcto
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.ferreteria.inventario.security.jwt.JwtUtil;
+import com.ferreteria.inventario.security.service.UserDetailsServiceImpl;
 
 // Clase para la solicitud de autenticación (usuario y contraseña)
 class AuthenticationRequest {
@@ -63,15 +67,29 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
+        // --- NUEVAS LÍNEAS DE DEPURACIÓN AQUÍ ---
+        System.out.println("DEBUG: AuthController - Petición de login recibida.");
+        System.out.println("DEBUG: AuthController - Usuario recibido: '" + authenticationRequest.getUsername() + "'");
+        // Por seguridad, no imprimas la contraseña completa en un log de producción.
+        // Aquí imprimimos solo los primeros caracteres para depuración.
+        String password = authenticationRequest.getPassword();
+        System.out.println("DEBUG: AuthController - Contraseña recibida (parcial): '" + password.substring(0, Math.min(password.length(), 2)) + "...'");
+        // ------------------------------------------
+
         try {
-            // Intenta autenticar al usuario usando el AuthenticationManager
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(), authenticationRequest.getPassword())
             );
+            // --- NUEVA LÍNEA DEBUG: Si llega aquí, es exitoso (teóricamente) ---
+            System.out.println("DEBUG: AuthController - authenticationManager.authenticate() EXITOSO.");
+            // ------------------------------------------------------------------
         } catch (BadCredentialsException e) {
-            // Si las credenciales son incorrectas, lanza una excepción
+            // --- NUEVA LÍNEA DEBUG AQUÍ ---
+            System.out.println("DEBUG: AuthController - Capturada BadCredentialsException: " + e.getMessage());
+            // --------------------------------
             throw new Exception("Credenciales incorrectas", e);
         }
+
 
         // Si la autenticación es exitosa, carga los detalles del usuario
         final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getUsername());
