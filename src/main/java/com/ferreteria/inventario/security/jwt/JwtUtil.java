@@ -1,88 +1,48 @@
-package com.ferreteria.inventario.security.jwt; // Asegúrate de que el paquete sea correcto
+package com.ferreteria.inventario.security.jwt;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import java.security.Key;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Function;
 
 @Component
 public class JwtUtil {
 
-    // Inyecta la clave secreta desde application.properties
     @Value("${jwt.secret}")
-    private String SECRET_KEY;
+    private String jwtSecret;
 
-    // Inyecta el tiempo de expiración desde application.properties
     @Value("${jwt.expiration}")
-    private long EXPIRATION_TIME; // En milisegundos
+    private int jwtExpirationMs;
 
-    // Obtiene la clave de firma a partir de la clave secreta
-    private Key getSigningKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
-        return Keys.hmacShaKeyFor(keyBytes);
+    public String generateToken(String username) {
+        return Jwts.builder()
+                .setSubject(username)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .signWith(SignatureAlgorithm.HS512, jwtSecret)
+                .compact();
     }
 
-    // Extrae un claim específico del token
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaims(token);
-        return claimsResolver.apply(claims);
+    public String getUsernameFromToken(String token) {
+        return Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody().getSubject();
     }
 
-    // Extrae todos los claims del token
-    private Claims extractAllClaims(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-    }
-
-    // Extrae el nombre de usuario del token
     public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
+        return getUsernameFromToken(token);
     }
 
-    // Extrae la fecha de expiración del token
-    public Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
-    }
-
-    // Verifica si el token ha expirado
-    private Boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
-    }
-
-    // Valida el token con los detalles del usuario
-    public Boolean validateToken(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
+    public boolean validateToken(String token, UserDetails userDetails) {
+        final String username = getUsernameFromToken(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
-    // Genera el token JWT
-    public String generateToken(UserDetails userDetails) {
-        Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, userDetails.getUsername());
+    private boolean isTokenExpired(String token) {
+        final Date expiration = Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody().getExpiration();
+        return expiration.before(new Date());
     }
 
-    // Crea el token JWT con claims, sujeto, fecha de emisión, fecha de expiración y firma
-    private String createToken(Map<String, Object> claims, String subject) {
-        return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(subject) // El nombre de usuario es el sujeto del token
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME)) // Expira en X milisegundos
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
-                .compact();
-    }
 }
+
 
